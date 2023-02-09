@@ -1,7 +1,7 @@
-package frc.robot.subsystems;
+package frc.robot.Subsystems;
 
 import com.ctre.phoenix.sensors.Pigeon2;
-import frc.robot.utils.Vector3;
+import frc.robot.Utilities.Vector3;
 
 public class Pigeon {
 
