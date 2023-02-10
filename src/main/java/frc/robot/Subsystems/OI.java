@@ -24,12 +24,6 @@ public class OI {
 
     public static void joystickInput() {
 
-        // if(driverStick.getRawButton(driveToPoint)){
-        //     drivingToPoint = true;
-        //     SwervePID.setDestPt(new Vector2(0,0));
-        //     SwervePID.setDestRot(Math.PI / 2);
-        // }
-
          Vector2 drive = new Vector2(driverStick.getRawAxis(moveX),-driverStick.getRawAxis(moveY));
 
          if (drive.mag() < 0.125)
@@ -40,23 +34,14 @@ public class OI {
         if(driverStick.getRawButton(pigeonZero))
             Pigeon.zero();
 
-        if(driverStick.getRawButton(driveToPoint)){
-            drivingToPoint = true;
-            // Scoring.setScoringTarget(4);
-        }
-
          double rotate = RMath.smoothJoystick1(driverStick.getRawAxis(rotateX)) * -0.3;
 
          if(Math.abs(rotate) < 0.005)
              rotate = 0;
         
-        if(!drivingToPoint)
-             SwerveManager.rotateAndDrive(rotate, drive);
-         else {
-            // Scoring.update();
-            // if(Scoring.isDone)
-                drivingToPoint = false;
-        }
+        // Make sure to change this back to the "rotate" variable - which is a double.
+        // It's 0 right now to test the drive motors of each individual swerve module.
+        SwerveManager.rotateAndDrive(0, drive);
 
     }
 }

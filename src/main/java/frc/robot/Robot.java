@@ -5,8 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Subsystems.*;
+import frc.robot.Utilities.*;
 
 
 public class Robot extends TimedRobot {
@@ -14,7 +14,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-
+    Pigeon.init();
+    Pigeon.zero();
+    SwerveManager.init();
+    RTime.init();
+    OI.init();
   }
 
   @Override
@@ -34,7 +38,10 @@ public class Robot extends TimedRobot {
   public void teleopInit() {}
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    RTime.update();
+    OI.joystickInput();
+  }
 
   @Override
   public void disabledInit() {}

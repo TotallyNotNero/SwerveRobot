@@ -9,10 +9,10 @@ public class SwerveManager {
     public static void init() {
 
         swerveMods = new SwerveModule[] {
-            new SwerveModule(8, 1),
-            new SwerveModule(2, 7),
-            new SwerveModule(4, 3),
-            new SwerveModule(6, 5),
+            new SwerveModule(1, 8),
+            new SwerveModule(7, 2),
+            new SwerveModule(3, 4),
+            new SwerveModule(5, 6),
         };
 
 

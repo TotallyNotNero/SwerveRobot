@@ -24,18 +24,25 @@ public class SwerveModule {
     private static final double ticksPerRotationSteer = 2048 * 12.8;
     private static final double ticksPerRotationDrive = 2048 * 8.14;
 
-    // PID: 5,0,0.
-
     public SwerveModule(int dID, int sID) {
+
+        // Configure motors based on IDs set in Phoenix Tuner
         this.driveMotor = new VictorSPX(dID);
         this.steerMotor = new TalonSRX(sID);
 
+        // Steer motor stuff
+        // We use the integrated encoder for the steer motors.
+        // We also configure PID for the steer motors here.
         this.steerMotor.configFactoryDefault();
         this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        this.steerMotor.config_kP(0, 0.2, 0);
+        this.steerMotor.config_kP(0, 0.15, 0);
         this.steerMotor.config_kI(0, 0.01, 0);
         this.steerMotor.config_kD(0, 0, 0);
 
+        // Drive motor stuff
+        // We are cheap so our drive motors don't have an encoder.
+        // We must line up the wheels everytime we turn the robot on.
+        // We also configure PID for the drive motors here.
         this.driveMotor.configFactoryDefault();
         this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
         this.driveMotor.config_kP(0, 0.09, 0);
@@ -43,8 +50,14 @@ public class SwerveModule {
         this.driveMotor.config_kD(0, 0, 0);
 
         inverted = false;
+
+        m_pos = new Vector2();
     }
 
+    /**
+     * Supply a double, representing power, to drive the motor.
+     * @param power Desired "speed" of the motor.
+     */
     public void drive(double power) {
         driveMotor.set(VictorSPXControlMode.PercentOutput, power * (inverted ? -1.0 : 1.0));
     }
