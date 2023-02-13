@@ -7,8 +7,12 @@ import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
+import edu.wpi.first.wpilibj.Encoder;
 import frc.robot.Utilities.Vector2;
 
+/**
+ * A class that represents one Swerve Module.
+ */
 public class SwerveModule {
     
     // Our Drive motors use VictorSPXs, and our Steer gearboxes use TalonSRXs.
@@ -24,6 +28,11 @@ public class SwerveModule {
     private static final double ticksPerRotationSteer = 2048 * 12.8;
     private static final double ticksPerRotationDrive = 2048 * 8.14;
 
+    /**
+     * Initialize a Swerve Module.
+     * @param dID The CAN ID for the Drive motor.
+     * @param sID The CAN ID for the Steer motor.
+     */
     public SwerveModule(int dID, int sID) {
 
         // Configure motors based on IDs set in Phoenix Tuner
@@ -51,7 +60,21 @@ public class SwerveModule {
 
         inverted = false;
 
+        this.resetSteerSensor();
+
         m_pos = new Vector2();
+    }
+
+    /**
+     * Aligns the steer motors to the position specified by the encoders.
+     */
+    public void resetSteerSensor() {
+
+        double pos = steerMotor.getSelectedSensorPosition();
+        pos = pos / 360.0 * ticksPerRotationSteer;
+        steerMotor.setSelectedSensorPosition( pos );
+        steerMotor.set(TalonSRXControlMode.MotionMagic, pos);
+
     }
 
     /**
@@ -62,10 +85,18 @@ public class SwerveModule {
         driveMotor.set(VictorSPXControlMode.PercentOutput, power * (inverted ? -1.0 : 1.0));
     }
 
+    /**
+     * Rotate to an angle, specified in radians.
+     * @param angle Double representing the angle to rotate to.
+     */
     public void rotateToRad(double angle) {
         rotate((angle - Math.PI * 0.5) / (2 * Math.PI) * ticksPerRotationSteer);
     }
 
+    /**
+     * Rotate to an angle.
+     * @param toAngle The angle, represented as a double, to rotate to.
+     */
     public void rotate(double toAngle) {
         double motorPos = steerMotor.getSelectedSensorPosition();
 

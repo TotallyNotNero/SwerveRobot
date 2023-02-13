@@ -2,10 +2,17 @@ package frc.robot.Subsystems;
 
 import frc.robot.Utilities.Vector2;
 
+/**
+ * A class that manages all the individual swerve modules.
+ */
 public class SwerveManager {
 
+    // Array representing all of the swerve modules.
     public static SwerveModule[] swerveMods;
 
+    /**
+     * Initialize the Swerve Manager.
+     */
     public static void init() {
 
         swerveMods = new SwerveModule[] {
@@ -18,6 +25,7 @@ public class SwerveManager {
 
     }
 
+    // Rotate the robot using the steer motors, and supply power to the drive motors.
     public static void rotateAndDrive(double rotSpeed, Vector2 move) {
 
         double heading = Pigeon.getRotationRad();
