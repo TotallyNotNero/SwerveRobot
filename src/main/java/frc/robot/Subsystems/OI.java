@@ -14,7 +14,9 @@ public class OI {
     static final int boost         = LogitechF310.AXIS_LEFT_TRIGGER;
     static final int pigeonZero    = LogitechF310.BUTTON_Y;
     static final int driveToPoint  = LogitechF310.BUTTON_A;
-
+    public static double x;
+    public static double y;
+    public static double rotation;
 
     static boolean drivingToPoint;
 
@@ -24,24 +26,13 @@ public class OI {
 
     public static void joystickInput() {
 
-         Vector2 drive = new Vector2(driverStick.getRawAxis(moveX),-driverStick.getRawAxis(moveY));
+        // Fetch double values from the controller
+        x = driverStick.getRawAxis(moveX);
+        y = -driverStick.getRawAxis(moveY);
+        rotation = driverStick.getRawAxis(rotateX);
 
-         if (drive.mag() < 0.125)
-             drive = new Vector2(0,0);
-         else
-             drive = RMath.smoothJoystick2(drive);
-
-        if(driverStick.getRawButton(pigeonZero))
-            Pigeon.zero();
-
-         double rotate = RMath.smoothJoystick1(driverStick.getRawAxis(rotateX)) * -0.3;
-
-         if(Math.abs(rotate) < 0.005)
-             rotate = 0;
-        
-        // Make sure to change this back to the "rotate" variable - which is a double.
-        // It's 0 right now to test the drive motors of each individual swerve module.
-        SwerveManager.rotateAndDrive(0, drive);
+        // Swerving and a steering! Zoom!
+        SwerveManager.drive(x, y, rotation);
 
     }
 }

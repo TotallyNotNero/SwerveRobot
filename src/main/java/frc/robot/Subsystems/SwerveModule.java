@@ -4,109 +4,77 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
-import frc.robot.Utilities.Vector2;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveModule {
+    private WPI_VictorSPX driveMotor;
+    private WPI_TalonSRX angleMotor;
+    private PIDController angleController;
+    public double xOffset;
+    public double yOffset;
+    private double setpoint;
     
-    // Our Drive motors use VictorSPXs, and our Steer gearboxes use TalonSRXs.
-    // (Talons have a dedicated port for encoders - steer gearboxes need encoders).
-    // IDs for the Talons are even, while the Victor IDs are odd.
-    public VictorSPX driveMotor;
-    public TalonSRX steerMotor;
+    public SwerveModule(int driveMotorId, int angleMotorId, double initialAngle) {
+        this.driveMotor = new WPI_VictorSPX(driveMotorId);
+        this.angleMotor = new WPI_TalonSRX(angleMotorId);
+        this.angleController = new PIDController(1, 0, 0);
+        xOffset = Units.inchesToMeters(6.0);
+        yOffset = Units.inchesToMeters(6.0);
+        setpoint = initialAngle;
 
-    public Vector2 m_pos;
+        // Configure drive motor
+        driveMotor.configFactoryDefault();
+        driveMotor.setInverted(false);
 
-    private boolean inverted;
+        // Configure angle motor
+        angleMotor.configFactoryDefault();
+        angleMotor.setInverted(false);
+        angleMotor.setSensorPhase(false);
 
-    private static final double ticksPerRotationSteer = 2048 * 12.8;
-    private static final double ticksPerRotationDrive = 2048 * 8.14;
+        // Configure PID controller
+        angleController.setTolerance(1.0);
+        angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-    public SwerveModule(int dID, int sID) {
-
-        // Configure motors based on IDs set in Phoenix Tuner
-        this.driveMotor = new VictorSPX(dID);
-        this.steerMotor = new TalonSRX(sID);
-
-        // Steer motor stuff
-        // We use the integrated encoder for the steer motors.
-        // We also configure PID for the steer motors here.
-        this.steerMotor.configFactoryDefault();
-        this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        this.steerMotor.config_kP(0, 0.15, 0);
-        this.steerMotor.config_kI(0, 0.01, 0);
-        this.steerMotor.config_kD(0, 0, 0);
-
-        // Drive motor stuff
-        // We are cheap so our drive motors don't have an encoder.
-        // We must line up the wheels everytime we turn the robot on.
-        // We also configure PID for the drive motors here.
-        this.driveMotor.configFactoryDefault();
-        this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        this.driveMotor.config_kP(0, 0.09, 0);
-        this.driveMotor.config_kI(0, 0.01, 0);
-        this.driveMotor.config_kD(0, 0, 0);
-
-        inverted = false;
-
-        m_pos = new Vector2();
+        // Set initial angle of the steer motor
+        setAngle(initialAngle);
     }
 
-    /**
-     * Supply a double, representing power, to drive the motor.
-     * @param power Desired "speed" of the motor.
-     */
-    public void drive(double power) {
-        driveMotor.set(VictorSPXControlMode.PercentOutput, power * (inverted ? -1.0 : 1.0));
+    public double getXOffset() {
+        return xOffset;
+    }
+    
+    public double getYOffset() {
+        return yOffset;
+    }
+    
+    public void setSpeed(double speed) {
+        driveMotor.set(VictorSPXControlMode.MotionMagic, speed);
+    }
+    
+    public void setAngle(double angle) {
+        setpoint = angle;
+    }
+    
+    public void update() {
+        double error = setpoint - getAngle();
+        double output = angleController.calculate(getAngle(), setpoint);
+        angleMotor.set(TalonSRXControlMode.MotionMagic, output);
     }
 
-    public void rotateToRad(double angle) {
-        rotate((angle - Math.PI * 0.5) / (2 * Math.PI) * ticksPerRotationSteer);
+    public double getAngle() {
+        double angle = angleMotor.getSelectedSensorPosition() * 2.0 * Math.PI / 4096.0;
+        return angle;
     }
-
-    public void rotate(double toAngle) {
-        double motorPos = steerMotor.getSelectedSensorPosition();
-
-        // The number of full rotations the motor has made
-        int numRot = (int) Math.floor(motorPos / ticksPerRotationSteer);
-
-        // The target motor position dictated by the joystick, in motor ticks
-        double joystickTarget = numRot * ticksPerRotationSteer + toAngle;
-        double joystickTargetPlus = joystickTarget + ticksPerRotationSteer;
-        double joystickTargetMinus = joystickTarget - ticksPerRotationSteer;
-
-        // The true destination for the motor to rotate to
-        double destination;
-
-        // Determine if, based on the current motor position, it should stay in the same
-        // rotation, enter the next, or return to the previous.
-        if (Math.abs(joystickTarget - motorPos) < Math.abs(joystickTargetPlus - motorPos)
-                && Math.abs(joystickTarget - motorPos) < Math.abs(joystickTargetMinus - motorPos)) {
-            destination = joystickTarget;
-        } else if (Math.abs(joystickTargetPlus - motorPos) < Math.abs(joystickTargetMinus - motorPos)) {
-            destination = joystickTargetPlus;
-        } else {
-            destination = joystickTargetMinus;
-        }
-
-        // If the target position is farther than a quarter rotation away from the
-        // current position, invert its direction instead of rotating it the full
-        // distance
-        if (Math.abs(destination - motorPos) > ticksPerRotationSteer / 4.0) {
-            inverted = true;
-            if (destination > motorPos)
-                destination -= ticksPerRotationSteer / 2.0;
-            else
-                destination += ticksPerRotationSteer / 2.0;
-        } else {
-            inverted = false;
-        }
-
-        steerMotor.set(TalonSRXControlMode.MotionMagic, destination);
-
-        
+    
+    public void updateDashboard(String name) {
+        SmartDashboard.putNumber(name + " Angle", getAngle());
+        SmartDashboard.putNumber(name + " Setpoint", setpoint);
+        SmartDashboard.putNumber(name + " Error", setpoint - getAngle());
     }
-
 }
