@@ -58,7 +58,9 @@ public class SwerveModule {
     }
     
     public void setAngle(double angle) {
-        setpoint = angle;
+        double error = setpoint - getAngle();
+        double output = angleController.calculate(getAngle(), setpoint);
+        angleMotor.set(TalonSRXControlMode.MotionMagic, output);
     }
     
     public void update() {
