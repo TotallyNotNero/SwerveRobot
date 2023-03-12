@@ -15,6 +15,8 @@ public class SwerveManager {
      */
     public static void init() {
 
+        // TODO: Fetch encoder offsets from the Talon SRXs powering the steer motors,
+        // and figure out where on the XY grid these modules are located at.
         swerveMods = new SwerveModule[] {
             new SwerveModule(1, 8),
             new SwerveModule(7, 2),
@@ -23,6 +25,13 @@ public class SwerveManager {
         };
 
 
+    }
+
+    // Zero the encoder output of each of the steering motors
+    public static void zeroSteeringEncoders() {
+        for (SwerveModule mod : swerveMods) {
+            mod.resetSteerSensor();
+        }
     }
 
     // Rotate the robot using the steer motors, and supply power to the drive motors.

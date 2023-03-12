@@ -25,6 +25,8 @@ public class SwerveModule {
 
     private boolean inverted;
 
+    private double offset;
+
     private static final double ticksPerRotationSteer = 2048 * 12.8;
     private static final double ticksPerRotationDrive = 2048 * 8.14;
 
@@ -33,18 +35,19 @@ public class SwerveModule {
      * @param dID The CAN ID for the Drive motor.
      * @param sID The CAN ID for the Steer motor.
      */
-    public SwerveModule(int dID, int sID) {
+    public SwerveModule(int dID, int sID, double x, double y, double encoderOffset) {
 
         // Configure motors based on IDs set in Phoenix Tuner
         this.driveMotor = new VictorSPX(dID);
         this.steerMotor = new TalonSRX(sID);
+        this.m_pos = new Vector2(x, y);
 
         // Steer motor stuff
         // We use the integrated encoder for the steer motors.
         // We also configure PID for the steer motors here.
         this.steerMotor.configFactoryDefault();
         this.steerMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-        this.steerMotor.config_kP(0, 0.15, 0);
+        this.steerMotor.config_kP(0, 0.05, 0);
         this.steerMotor.config_kI(0, 0.01, 0);
         this.steerMotor.config_kD(0, 0, 0);
 
@@ -60,9 +63,9 @@ public class SwerveModule {
 
         inverted = false;
 
-        this.resetSteerSensor();
+        this.offset = encoderOffset;
 
-        m_pos = new Vector2();
+        this.resetSteerSensor();
     }
 
     /**
@@ -70,7 +73,7 @@ public class SwerveModule {
      */
     public void resetSteerSensor() {
 
-        double pos = steerMotor.getSelectedSensorPosition();
+        double pos = steerMotor.getSelectedSensorPosition() - this.offset;
         pos = pos / 360.0 * ticksPerRotationSteer;
         steerMotor.setSelectedSensorPosition( pos );
         steerMotor.set(TalonSRXControlMode.MotionMagic, pos);
