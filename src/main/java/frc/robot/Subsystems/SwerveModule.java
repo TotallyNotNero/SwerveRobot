@@ -27,8 +27,9 @@ public class SwerveModule {
 
     private double offset;
 
-    private static final double ticksPerRotationSteer = 2048 * 12.8;
-    private static final double ticksPerRotationDrive = 2048 * 8.14;
+    private static final double ticksPerRotationSteer = 7 * 6.67;
+    // No encoder for the drive motor
+    private static final double ticksPerRotationDrive = 0 * 6.67;
 
     /**
      * Initialize a Swerve Module.
